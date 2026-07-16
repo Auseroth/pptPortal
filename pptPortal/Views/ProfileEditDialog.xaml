@@ -1,0 +1,63 @@
+<Window x:Class="pptPortal.Views.ProfileEditDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Profile Editor" Height="450" Width="500"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Profile Editor" FontSize="18" FontWeight="Bold" Margin="0,0,0,20"/>
+
+        <!-- Profile Name -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,10">
+            <TextBlock Text="Profile Name:" Margin="0,0,0,5"/>
+            <TextBox x:Name="ProfileNameTextBox" />
+        </StackPanel>
+
+        <!-- Computer Identifier -->
+        <StackPanel Grid.Row="2" Margin="0,0,0,10">
+            <TextBlock Text="Computer Identifier (IP or Hostname):" Margin="0,0,0,5"/>
+            <TextBox x:Name="ComputerIdentifierTextBox" />
+        </StackPanel>
+
+        <!-- Target UNC Path -->
+        <StackPanel Grid.Row="3" Margin="0,0,0,10">
+            <TextBlock Text="Target UNC Path (e.g., \\192.168.1.100\ShareName\Folder):" Margin="0,0,0,5"/>
+            <TextBox x:Name="TargetUncPathTextBox" />
+        </StackPanel>
+
+        <!-- Target Filename -->
+        <StackPanel Grid.Row="4" Margin="0,0,0,10">
+            <TextBlock Text="Target Filename (e.g., Presentation.pptx):" Margin="0,0,0,5"/>
+            <TextBox x:Name="TargetFileNameTextBox" />
+        </StackPanel>
+
+        <!-- Admin Username -->
+        <StackPanel Grid.Row="5" Margin="0,0,0,10">
+            <TextBlock Text="Admin Username (e.g., 192.168.1.100\Administrator):" Margin="0,0,0,5"/>
+            <TextBox x:Name="AdminUsernameTextBox" />
+        </StackPanel>
+
+        <!-- Password -->
+        <StackPanel Grid.Row="6" Margin="0,0,0,10">
+            <TextBlock Text="Password:" Margin="0,0,0,5"/>
+            <PasswordBox x:Name="PasswordBox" />
+        </StackPanel>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="OK" Width="80" Margin="0,0,10,0" Click="OkButton_Click" IsDefault="True"/>
+            <Button Content="Cancel" Width="80" Click="CancelButton_Click" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>
