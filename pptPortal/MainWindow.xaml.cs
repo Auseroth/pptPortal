@@ -30,7 +30,8 @@ namespace pptPortal
             ConfigService configService,
             CredentialService credentialService,
             FileTransferService fileTransferService,
-            AdminElevationService adminService)
+            AdminElevationService adminService,
+            UserPreferencesService userPreferencesService)
         {
             InitializeComponent();
 
@@ -38,7 +39,7 @@ namespace pptPortal
             _credentialService = credentialService;
             _adminService = adminService;
 
-            _viewModel = new MainViewModel(configService, fileTransferService);
+            _viewModel = new MainViewModel(configService, fileTransferService, userPreferencesService);
             DataContext = _viewModel;
 
             _viewModel.SettingsRequested += OnSettingsRequested;

@@ -14,23 +14,31 @@ public class MainViewModel : ViewModelBase
 {
     private readonly ConfigService _configService;
     private readonly FileTransferService _fileTransferService;
+    private readonly UserPreferencesService _preferencesService;
     private AppConfig? _config;
+    private UserPreferences? _preferences;
     private string? _selectedFilePath;
     private string _statusMessage = "Ready";
     private bool _isUploading;
+    private readonly string _machineName = Environment.MachineName;
 
-    public MainViewModel(ConfigService configService, FileTransferService fileTransferService)
+    public MainViewModel(
+        ConfigService configService, 
+        FileTransferService fileTransferService,
+        UserPreferencesService preferencesService)
     {
         _configService = configService;
         _fileTransferService = fileTransferService;
+        _preferencesService = preferencesService;
 
-        // Load config
-        LoadConfig();
-
-        // Commands
+        // Commands - INITIALIZE FIRST
         BrowseFileCommand = new RelayCommand(BrowseFile);
         UploadFileCommand = new RelayCommand(UploadFile, CanUploadFile);
         OpenSettingsCommand = new RelayCommand(OpenSettings);
+
+        // Load config and preferences - THEN LOAD DATA
+        LoadConfig();
+        LoadPreferences();
     }
 
     public string? SelectedFilePath
@@ -65,6 +73,35 @@ public class MainViewModel : ViewModelBase
 
     public string? CurrentProfileName => _config?.SelectedProfile?.ProfileName;
 
+    public List<string> RecentFiles => _preferences?.RecentFiles ?? new List<string>();
+
+    public string MachineName => _machineName;
+
+    public List<TargetProfile> AvailableProfiles => _config?.Profiles ?? new List<TargetProfile>();
+
+    public TargetProfile? SelectedProfile
+    {
+        get => _config?.SelectedProfile;
+        set
+        {
+            if (_config != null && value != null)
+            {
+                var index = _config.Profiles.IndexOf(value);
+                if (index >= 0)
+                {
+                    _config.SelectedProfileIndex = index;
+                    
+                    // Save to user preferences instead of config
+                    SaveSelectedProfileToPreferences(index);
+                    
+                    OnPropertyChanged(nameof(SelectedProfile));
+                    OnPropertyChanged(nameof(CurrentProfileName));
+                    ((RelayCommand)UploadFileCommand).RaiseCanExecuteChanged();
+                }
+            }
+        }
+    }
+
     public ICommand BrowseFileCommand { get; }
     public ICommand UploadFileCommand { get; }
     public ICommand OpenSettingsCommand { get; }
@@ -78,6 +115,14 @@ public class MainViewModel : ViewModelBase
             if (_configService.ConfigExists())
             {
                 _config = _configService.LoadConfig();
+
+                // Restore selected profile from user preferences
+                if (_preferences != null && _preferences.SelectedProfileIndex.HasValue 
+                    && _preferences.SelectedProfileIndex.Value >= 0 
+                    && _preferences.SelectedProfileIndex.Value < _config.Profiles.Count)
+                {
+                    _config.SelectedProfileIndex = _preferences.SelectedProfileIndex.Value;
+                }
 
                 if (_config.SelectedProfile == null)
                 {
@@ -99,22 +144,112 @@ public class MainViewModel : ViewModelBase
         }
 
         OnPropertyChanged(nameof(CurrentProfileName));
+        OnPropertyChanged(nameof(AvailableProfiles));
+        OnPropertyChanged(nameof(SelectedProfile));
+    }
+
+    private void LoadPreferences()
+    {
+        _preferences = _preferencesService.LoadPreferences();
+
+        // Load computer-specific or general last file path
+        if (_preferences.ComputerSpecificSettings.TryGetValue(_machineName, out var computerPrefs) 
+            && !string.IsNullOrEmpty(computerPrefs.LastFilePath) 
+            && File.Exists(computerPrefs.LastFilePath))
+        {
+            SelectedFilePath = computerPrefs.LastFilePath;
+        }
+        else if (!string.IsNullOrEmpty(_preferences.LastFilePath) && File.Exists(_preferences.LastFilePath))
+        {
+            SelectedFilePath = _preferences.LastFilePath;
+        }
+
+        OnPropertyChanged(nameof(RecentFiles));
+    }
+
+    private void SaveSelectedProfileToPreferences(int profileIndex)
+    {
+        if (_preferences == null) return;
+
+        try
+        {
+            _preferences.SelectedProfileIndex = profileIndex;
+            _preferencesService.SavePreferences(_preferences);
+            StatusMessage = $"Switched to profile: {_config?.SelectedProfile?.ProfileName}";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Failed to save profile preference:\n\n{ex.Message}",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
+            // Reload to revert UI
+            LoadPreferences();
+            OnPropertyChanged(nameof(SelectedProfile));
+        }
     }
 
     private void BrowseFile()
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Select PowerPoint File",
-            Filter = "PowerPoint Files (*.pptx;*.ppt)|*.pptx;*.ppt|All Files (*.*)|*.*",
-            CheckFileExists = true
+            Filter = "PowerPoint Files|*.ppt;*.pptx|All Files|*.*",
+            Title = "Select PowerPoint File"
         };
+
+        // Set initial directory from preferences
+        if (_preferences?.ComputerSpecificSettings.TryGetValue(_machineName, out var computerPrefs) == true
+            && !string.IsNullOrEmpty(computerPrefs.DefaultDirectory))
+        {
+            dialog.InitialDirectory = computerPrefs.DefaultDirectory;
+        }
+        else if (!string.IsNullOrEmpty(_preferences?.LastFilePath))
+        {
+            var lastDir = Path.GetDirectoryName(_preferences.LastFilePath);
+            if (!string.IsNullOrEmpty(lastDir) && Directory.Exists(lastDir))
+            {
+                dialog.InitialDirectory = lastDir;
+            }
+        }
 
         if (dialog.ShowDialog() == true)
         {
             SelectedFilePath = dialog.FileName;
-            StatusMessage = $"Selected: {Path.GetFileName(dialog.FileName)}";
+            SaveFilePreference(dialog.FileName);
         }
+    }
+
+    private void SaveFilePreference(string filePath)
+    {
+        if (_preferences == null) return;
+
+        // Update general last file
+        _preferences.LastFilePath = filePath;
+
+        // Update computer-specific settings
+        if (!_preferences.ComputerSpecificSettings.ContainsKey(_machineName))
+        {
+            _preferences.ComputerSpecificSettings[_machineName] = new ComputerPreferences();
+        }
+
+        _preferences.ComputerSpecificSettings[_machineName].LastFilePath = filePath;
+        _preferences.ComputerSpecificSettings[_machineName].DefaultDirectory = Path.GetDirectoryName(filePath);
+        _preferences.ComputerSpecificSettings[_machineName].PreferredProfile = _config?.SelectedProfile?.ProfileName;
+
+        // Maintain recent files list (max 10)
+        if (!_preferences.RecentFiles.Contains(filePath))
+        {
+            _preferences.RecentFiles.Insert(0, filePath);
+            if (_preferences.RecentFiles.Count > 10)
+            {
+                _preferences.RecentFiles.RemoveAt(_preferences.RecentFiles.Count - 1);
+            }
+        }
+
+        _preferencesService.SavePreferences(_preferences);
+        OnPropertyChanged(nameof(RecentFiles));
     }
 
     private bool CanUploadFile()
@@ -202,5 +337,8 @@ public class MainViewModel : ViewModelBase
     public void RefreshConfig()
     {
         LoadConfig();
+        OnPropertyChanged(nameof(CurrentProfileName));
+        OnPropertyChanged(nameof(AvailableProfiles));
+        OnPropertyChanged(nameof(SelectedProfile));
     }
 }

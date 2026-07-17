@@ -13,6 +13,7 @@ namespace pptPortal
         private CredentialService? _credentialService;
         private FileTransferService? _fileTransferService;
         private AdminElevationService? _adminService;
+        private UserPreferencesService? _userPreferencesService;
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -23,6 +24,7 @@ namespace pptPortal
             _credentialService = new CredentialService();
             _fileTransferService = new FileTransferService(_credentialService);
             _adminService = new AdminElevationService();
+            _userPreferencesService = new UserPreferencesService();
 
             // Check if config exists
             if (!_configService.ConfigExists())
@@ -49,7 +51,8 @@ namespace pptPortal
                 _configService,
                 _credentialService,
                 _fileTransferService,
-                _adminService);
+                _adminService,
+                _userPreferencesService);
 
             mainWindow.Show();
         }

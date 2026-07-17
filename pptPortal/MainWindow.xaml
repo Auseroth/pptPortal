@@ -20,97 +20,133 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="15"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="15"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="15"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Header with Settings Button -->
-        <Grid Grid.Row="0" Background="#FF2C3E50" Margin="0,0,0,20">
+        <Grid Grid.Row="0" Background="#FF2C3E50">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0" Text="PPT Portal" 
+            <Image Grid.Column="0" 
+                   Source="pptPortal.ico" Height="62" 
+                   Margin="15,0,0,0" 
+                   VerticalAlignment="Center"/>
+
+            <TextBlock Grid.Column="1" Text="PPT Portal" 
                        FontSize="24" FontWeight="Bold" 
                        Foreground="White" 
-                       Margin="20,15,0,15" VerticalAlignment="Center"/>
+                       Margin="0,15" VerticalAlignment="Center"/>
 
-            <Button Grid.Column="1" Content="⚙ Settings" 
+            <Button Grid.Column="3" Content="⚙ Settings" 
                     Width="100" Height="35" Margin="0,0,20,0"
                     Command="{Binding OpenSettingsCommand}"
                     Background="#FF34495E" Foreground="White"
                     BorderThickness="0" FontSize="14" Cursor="Hand"/>
         </Grid>
 
-        <!-- Main Content -->
-        <StackPanel Grid.Row="1" Margin="40,20,40,20" VerticalAlignment="Center">
-            <!-- Profile Info -->
-            <TextBlock Text="{Binding CurrentProfileName, StringFormat='Current Profile: {0}'}" 
+        <!-- Profile Selector -->
+        <Grid Grid.Row="2" Margin="40,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" Text="Target Profile:" 
                        FontSize="14" FontWeight="SemiBold" 
-                       Margin="0,0,0,20" 
                        Foreground="#FFECF0F1"
-                       HorizontalAlignment="Center"/>
+                       VerticalAlignment="Center"/>
 
-            <!-- File Selection -->
-            <Grid Margin="0,0,0,20">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+            <ComboBox Grid.Column="2" 
+                      ItemsSource="{Binding AvailableProfiles}"
+                      SelectedItem="{Binding SelectedProfile, Mode=TwoWay}"
+                      DisplayMemberPath="ProfileName"
+                      Height="35" 
+                      VerticalContentAlignment="Center"
+                      FontSize="13"
+                      Background="#FFF5F5F5"/>
+        </Grid>
 
-                <TextBox Grid.Column="0" 
-                         Text="{Binding SelectedFilePath, Mode=OneWay}" 
-                         IsReadOnly="True" 
-                         Height="40" 
-                         VerticalContentAlignment="Center"
-                         Padding="10,0"
-                         FontSize="13"
-                         Background="#FFF5F5F5"/>
+        <!-- File Selection with Recent Files -->
+        <Grid Grid.Row="4" Margin="40,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="5"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="100"/>
+            </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="1" Content="Browse..." 
-                        Width="100" Height="40" Margin="10,0,0,0"
-                        Command="{Binding BrowseFileCommand}"
-                        Background="#FF3498DB" Foreground="White"
-                        BorderThickness="0" FontSize="14" FontWeight="SemiBold" Cursor="Hand"/>
-            </Grid>
+            <ComboBox Grid.Row="0" Grid.Column="0" 
+                      ItemsSource="{Binding RecentFiles}"
+                      SelectedItem="{Binding SelectedFilePath}" 
+                      IsEditable="True"
+                      Height="40" 
+                      VerticalContentAlignment="Center"
+                      FontSize="13"
+                      Background="#FFF5F5F5"/>
 
-            <!-- Upload Button -->
-            <Button Content="Upload to Target" 
-                    Height="50" 
-                    Command="{Binding UploadFileCommand}"
-                    Background="#FF27AE60" Foreground="White"
-                    BorderThickness="0" FontSize="16" FontWeight="Bold" Cursor="Hand"
-                    IsEnabled="{Binding IsUploading, Converter={StaticResource InverseBoolConverter}}">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" 
-                                            CornerRadius="5"
-                                            BorderThickness="0">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#FF229954"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Background" Value="#FFBDC3C7"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-            </Button>
-        </StackPanel>
+            <Button Grid.Row="0" Grid.Column="2" Content="Browse..." 
+                    Height="40"
+                    Command="{Binding BrowseFileCommand}"
+                    Background="#FF3498DB" Foreground="White"
+                    BorderThickness="0" FontSize="14" FontWeight="SemiBold" Cursor="Hand"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" 
+                       Text="{Binding MachineName, StringFormat='Computer: {0}'}" 
+                       FontSize="10" Foreground="#B0B0B0" Margin="5,0,0,0"/>
+        </Grid>
+
+        <!-- Upload Button -->
+        <Button Grid.Row="6" Margin="40,0"
+                Content="Upload to Target" 
+                Height="50" 
+                Command="{Binding UploadFileCommand}"
+                Background="#FF27AE60" Foreground="White"
+                BorderThickness="0" FontSize="16" FontWeight="Bold" Cursor="Hand"
+                IsEnabled="{Binding IsUploading, Converter={StaticResource InverseBoolConverter}}">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" 
+                                        CornerRadius="5"
+                                        BorderThickness="0">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#FF229954"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Background" Value="#FFBDC3C7"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
 
         <!-- Status Bar -->
-        <Border Grid.Row="3" Background="#FF2C3E50" BorderBrush="#FFBDC3C7" BorderThickness="0,1,0,0">
+        <Border Grid.Row="8" Background="#FF2C3E50" BorderBrush="#FFBDC3C7" BorderThickness="0,1,0,0">
             <TextBlock Text="{Binding StatusMessage}" 
                        Margin="15,10" 
                        FontSize="12" 
