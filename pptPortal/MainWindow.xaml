@@ -8,6 +8,12 @@
         Title="PPT Portal - Remote PowerPoint Uploader" Height="350" Width="600"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanMinimize">
+    <Window.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#FF2C3E50" Offset="0"/>
+            <GradientStop Color="#FFECF0F1" Offset="1"/>
+        </LinearGradientBrush>
+    </Window.Background>
     <Window.Resources>
         <local:InverseBoolConverter x:Key="InverseBoolConverter"/>
     </Window.Resources>
@@ -44,7 +50,7 @@
             <TextBlock Text="{Binding CurrentProfileName, StringFormat='Current Profile: {0}'}" 
                        FontSize="14" FontWeight="SemiBold" 
                        Margin="0,0,0,20" 
-                       Foreground="#FF7F8C8D"
+                       Foreground="#FFECF0F1"
                        HorizontalAlignment="Center"/>
 
             <!-- File Selection -->
@@ -104,11 +110,11 @@
         </StackPanel>
 
         <!-- Status Bar -->
-        <Border Grid.Row="3" Background="#FFECF0F1" BorderBrush="#FFBDC3C7" BorderThickness="0,1,0,0">
+        <Border Grid.Row="3" Background="#FF2C3E50" BorderBrush="#FFBDC3C7" BorderThickness="0,1,0,0">
             <TextBlock Text="{Binding StatusMessage}" 
                        Margin="15,10" 
                        FontSize="12" 
-                       Foreground="#FF7F8C8D"/>
+                       Foreground="#FFECF0F1"/>
         </Border>
     </Grid>
 </Window>
